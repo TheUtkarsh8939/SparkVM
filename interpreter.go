@@ -74,7 +74,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 
 			}
 		}
-		fmt.Println("Running", functionName, "line", i+1)
+		// fmt.Println("Running", functionName, "line", i+1)
 		if (inFunction && currentFunc == "%main") || isRunningAFunc {
 
 			switch instruction {

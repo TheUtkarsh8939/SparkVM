@@ -40,7 +40,7 @@ func findtype(tofindtypeof string) []string {
 	var typearr []string
 	if contains(instructionlist, tofindtypeof) {
 		typearr = []string{"instruction", tofindtypeof}
-	} else if strings.HasPrefix(tofindtypeof, "%") {
+	} else if strings.HasPrefix(tofindtypeof, "%") || strings.HasPrefix(tofindtypeof, "$") {
 		typearr = []string{"var", tofindtypeof}
 	} else if strings.HasPrefix(tofindtypeof, "'") && strings.HasSuffix(tofindtypeof, "'") {
 		typearr = []string{"string", tofindtypeof}

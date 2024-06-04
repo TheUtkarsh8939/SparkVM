@@ -13,14 +13,22 @@ type node struct {
 
 // Defining structure of A stack frame
 type funcMemory struct {
-	Mem  map[string]node
-	size int
+	Mem           map[string]node
+	size          int
+	globalPointer *GlobalMemory
 }
 
 // Structure of the call stack
 type callStack struct {
-	size  int
-	Stack map[string]*funcMemory
+	size          int
+	Stack         map[string]*funcMemory
+	globalPointer *GlobalMemory
+}
+
+// Structure Defining the global memory
+type GlobalMemory struct {
+	size   int
+	Memory map[string]node
 }
 
 // Should be type Type int but I am too lazy to change everything. This just stores the type of the vvariable
@@ -36,25 +44,37 @@ type varValue struct {
 	any
 }
 
-// Initializations of call stack
-func initCallStack() *callStack {
-	return &callStack{
-		size:  1,
-		Stack: map[string]*funcMemory{},
+// Initializer of Gloal Memory
+func initGlobalMemory() *GlobalMemory {
+	return &GlobalMemory{
+		size:   0,
+		Memory: map[string]node{},
 	}
+}
+
+// Initializations of call stack
+func initCallStack() (*callStack, *GlobalMemory) {
+	globalPointer := initGlobalMemory()
+	return &callStack{
+		size:          0,
+		Stack:         map[string]*funcMemory{},
+		globalPointer: globalPointer,
+	}, globalPointer
 }
 
 // Deletes stack frame from call stacks
 func (CS *callStack) deleteStackFrame(name string) {
 	// fmt.Println("Trying to delete " + name)
 	delete(CS.Stack, name)
+	CS.size--
 }
 
 // Initializations of the function memory
 func (CS *callStack) initMemory(name string) *funcMemory {
 	data := funcMemory{
-		Mem:  map[string]node{},
-		size: 0,
+		Mem:           map[string]node{},
+		size:          0,
+		globalPointer: CS.globalPointer,
 	}
 	CS.Stack[name] = &data
 	CS.size++
@@ -68,19 +88,32 @@ func (fnMem *funcMemory) setVar(name string, Type int, value any) {
 		Data: value,
 	}
 
-	fnMem.Mem[strings.Split(name, "%")[1]] = dataNode
-	fnMem.size++
+	if strings.HasPrefix(name, "%") {
+		fnMem.Mem[strings.Split(name, "%")[1]] = dataNode
+		fnMem.size++
+	} else if strings.HasPrefix(name, "$") {
+		global := fnMem.globalPointer
+		global.Memory[strings.Split(name, "$")[1]] = dataNode
+		global.size++
+	}
 }
 
 // Retrieves Value of a variable
 func (fnMem *funcMemory) get(name string) varValue {
-	varName := strings.Split(name, "%")[1]
-	valueAndType := fnMem.Mem[varName]
+	var varVal varValue
+	var valueAndType node
+	if strings.HasPrefix(name, "%") {
+		varName := strings.Split(name, "%")[1]
+		valueAndType = fnMem.Mem[varName]
+	} else {
+		global := fnMem.globalPointer
+		varName := strings.Split(name, "$")[1]
+		valueAndType = global.Memory[varName]
+	}
 	emptyNode := node{}
 	if valueAndType == emptyNode {
 		fmt.Println("Undefined Variable")
 	}
-	var varVal varValue
 	if valueAndType.Type == 1 {
 		varVal = varValue{Type{valueAndType.Type}, 0, string(valueAndType.Data.(string)), valueAndType.Data}
 	} else if valueAndType.Type == 0 {
