@@ -18,7 +18,7 @@ Function to run a given string of code. It also requires fuction name
 and call stack for memory operation and is it running a function for
 stopping at the end keyword
 */
-func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bool) map[string]node {
+func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bool) (map[string]node, bool) {
 	//Initializes the local memory and pushes stack frame to stack
 	Memory := CS.initMemory(functionName)
 	//Next 2 variables are required for funtion declarations
@@ -36,7 +36,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 			fmt.Println("\u001b[31mFirst Word Must be an instruction at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 			CS.deleteStackFrame(functionName)
 
-			return Memory.Mem
+			return Memory.Mem, true
 		}
 		//Defines the current instruction
 		instruction := data[i][0][1]
@@ -47,7 +47,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 				fmt.Println("\u001b[31mSecond operand of function instruction should be a function with the syntax <name>(<args>) at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 				CS.deleteStackFrame(functionName)
 
-				return Memory.Mem
+				return Memory.Mem, true
 			}
 			tmp := strings.Split(data[i][1][1], "(")
 			currentFunc = "%" + tmp[0]
@@ -58,7 +58,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 						fmt.Println("\u001b[31mFunction arguements could only be variables at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 						CS.deleteStackFrame(functionName)
 
-						return Memory.Mem
+						return Memory.Mem, true
 					}
 				}
 			}
@@ -70,7 +70,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 			inFunction = false
 			if isRunningAFunc {
 				CS.deleteStackFrame(functionName)
-				return Memory.Mem
+				return Memory.Mem, true
 
 			}
 		}
@@ -78,31 +78,67 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 		if (inFunction && currentFunc == "%main") || isRunningAFunc {
 
 			switch instruction {
+			case "eql", "cmp":
+				if len(data[i]) < 3 {
+					fmt.Println("\u001b[31mFunction arguements could only be variables at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem, true
+				}
+				opd1 := data[i][1]
+				opd2 := data[i][2]
+				data1, data2 := 0.0, 0.0
+				if opd1[0] == "var" || opd2[0] == "var" {
+					Mem1, Mem2 := Memory.get(opd1[1]), Memory.get(opd2[1])
+					if Mem1.Type.int != 0 || Mem2.Type.int != 0 {
+						fmt.Println("\u001b[31mFirst and Second Operand can only be an immediate or a variable with a type of number at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+						CS.deleteStackFrame(functionName)
+
+						return Memory.Mem, true
+					}
+					data1 = Mem1.float64
+					data2 = Mem2.float64
+				} else if opd1[0] == "immediate" || opd2[0] == "immediate" {
+					data1, _ = strconv.ParseFloat(opd1[1], 64)
+					data2, _ = strconv.ParseFloat(opd2[1], 64)
+				} else {
+					fmt.Println("\u001b[31mFirst and Second Operand can only be an immediate or a variable with a type of number at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem, true
+				}
+				if instruction == "eql" {
+					Memory.setVar("_res", 0, toInt(data1 == data2))
+				} else {
+					Memory.setVar("_res", 0, toInt(data1 > data2))
+
+				}
+
 			case "deref":
 				if len(data[i]) < 3 {
 					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if data[i][1][0] != "var" {
 					fmt.Println("\u001b[31mExpected Variable for the first operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if data[i][2][0] != "var" {
 					fmt.Println("\u001b[31mExpected Variable for second operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				varData := Memory.get(data[i][1][1])
 				if varData.Type.int != 3 {
 					fmt.Println("\u001b[31mExpected pointer variable for first operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				val := CS.deref(varData.any.(string), functionName, i)
 				Memory.setVar(data[i][2][1], val.Type, val.Data)
@@ -111,19 +147,19 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if data[i][1][0] != "var" {
 					fmt.Println("\u001b[31mExpected Variable for second operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if data[i][2][0] != "var" {
 					fmt.Println("\u001b[31mExpected Variable for second operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				x := functionName + "*" + data[i][1][1]
 				Memory.setVar(data[i][2][1], 3, x)
@@ -132,7 +168,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				firstOpd := data[i][1]
 				secondOpd := data[i][2]
@@ -141,19 +177,19 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mImport path must be a string at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if secondOpd[0] != "keyword" || secondOpd[1] != "as" {
 					fmt.Println("\u001b[31mSecond Operand Must be \"as\" at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if thirdOpd[0] != "var" {
 					fmt.Println("\u001b[31mImport name should be a variable at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				Memory.setVar(thirdOpd[1], 2, firstOpd[1])
 			case "call":
@@ -161,14 +197,14 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				firstOpd := data[i][1]
 				if firstOpd[0] != "function" {
 					fmt.Println("\u001b[31mFirst operand must be a variable and a function type variable at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				funcName, _, _ := strings.Cut(firstOpd[1], "(")
 				funcName = "%" + funcName
@@ -178,15 +214,17 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mFirst operand must be a variable and a function type variable at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				Tokens := funcData.any.(Function).Tokens
-				run(Tokens, funcName, CS, true)
-
+				_, err := run(Tokens, funcName, CS, true)
+				if err {
+					return Memory.Mem, true
+				}
 			case "halt":
 				CS.deleteStackFrame(functionName)
 
-				return Memory.Mem
+				return Memory.Mem, true
 			case "set":
 				Type := 0
 
@@ -194,7 +232,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mNot Enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if data[i][2][0] == "string" {
 					Type = 1
@@ -203,7 +241,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mVariable value couldn't be an instruction or keyword at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				} else if data[i][2][0] == "immediate" {
 					x, _ := strconv.ParseFloat(data[i][2][1], 64)
 					Memory.setVar(data[i][1][1], Type, x)
@@ -213,7 +251,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mFirst Operand Must be an Variable at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 			case "add":
 				operate(data, i, func(a float64, b float64) float64 { return a + b }, Memory, &CS, functionName)
@@ -228,13 +266,13 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mNot Enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				if _, err := strconv.Atoi(data[i][1][1]); data[i][1][0] != "immediate" || err != nil {
 					fmt.Println("\u001b[31mSleep Time can't be anything but a number at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				conv, _ := strconv.Atoi(data[i][1][1])
 				time.Sleep(time.Duration(conv) * time.Millisecond)
@@ -243,7 +281,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mNot Enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				val := Memory.get(data[i][1][1])
 				fmt.Println(val.any)
@@ -252,7 +290,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					fmt.Println("\u001b[31mNot Enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
 					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem
+					return Memory.Mem, true
 				}
 				lineNum, lineNumType := data[i][1][1], data[i][1][0]
 				if _, err := strconv.Atoi(lineNum); lineNumType != "immediate" || err != nil {
@@ -280,5 +318,5 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 		i++
 	}
 	CS.deleteStackFrame(functionName)
-	return Memory.Mem
+	return Memory.Mem, false
 }

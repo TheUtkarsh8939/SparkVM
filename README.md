@@ -16,6 +16,8 @@ The SparkVM follows the instruction operand structure where the first word of an
 * End
 * Deref
 * Setptr
+* Cmp
+* Eql
 * Import **(Work in progress)**
 
 ## Features

@@ -21,7 +21,7 @@ func main() {
 			}
 			callStack, globalPointer := initCallStack()
 			data := tokenize(content)
-			atLastMem := run(data, "%global", *callStack, false)
+			atLastMem, _ := run(data, "%global", *callStack, false)
 			fmt.Printf("%v\n", atLastMem)
 			fmt.Printf("%v\n", *callStack)
 			fmt.Printf("%v\n", *globalPointer)

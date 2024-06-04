@@ -6,6 +6,16 @@ import (
 	"strings"
 )
 
+// Converts false to 0 and true to 1
+func toInt(boolean bool) int {
+	if !boolean {
+		return 0
+	} else {
+		return 1
+	}
+
+}
+
 // A function to check if a slice contains an element
 func contains(elems []string, v string) bool {
 	for _, s := range elems {
