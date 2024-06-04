@@ -78,6 +78,55 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 		if (inFunction && currentFunc == "%main") || isRunningAFunc {
 
 			switch instruction {
+			case "deref":
+				if len(data[i]) < 3 {
+					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem
+				}
+				if data[i][1][0] != "var" {
+					fmt.Println("\u001b[31mExpected Variable for the first operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem
+				}
+				if data[i][2][0] != "var" {
+					fmt.Println("\u001b[31mExpected Variable for second operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem
+				}
+				varData := Memory.get(data[i][1][1])
+				if varData.Type.int != 3 {
+					fmt.Println("\u001b[31mExpected pointer variable for first operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem
+				}
+				val := CS.deref(varData.any.(string), functionName, i)
+				Memory.setVar(data[i][2][1], val.Type, val.Data)
+			case "setptr":
+				if len(data[i]) < 3 {
+					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem
+				}
+				if data[i][1][0] != "var" {
+					fmt.Println("\u001b[31mExpected Variable for second operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem
+				}
+				if data[i][2][0] != "var" {
+					fmt.Println("\u001b[31mExpected Variable for second operand at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+					CS.deleteStackFrame(functionName)
+
+					return Memory.Mem
+				}
+				x := functionName + "*" + data[i][1][1]
+				Memory.setVar(data[i][2][1], 3, x)
 			case "import":
 				if len(data[i]) < 4 {
 					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")

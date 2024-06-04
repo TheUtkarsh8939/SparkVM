@@ -69,6 +69,29 @@ func (CS *callStack) deleteStackFrame(name string) {
 	CS.size--
 }
 
+// Derefrencer Function
+func (CS *callStack) deref(ptr string, accesser string, i int) node {
+	functionName, variableName, isCorrectSyntax := strings.Cut(ptr, "*")
+	if !isCorrectSyntax {
+		fmt.Println("\u001b[31mIncorrect pointer syntax at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+
+		CS.deleteStackFrame(accesser)
+		return node{}
+	}
+	funcMemory := CS.Stack[functionName]
+	if funcMemory == nil {
+		fmt.Println("\u001b[31mNil Pointer Derefrence at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
+		CS.deleteStackFrame(accesser)
+		return node{}
+	}
+	data := funcMemory.get(variableName)
+	returnNode := node{
+		Type: data.Type.int,
+		Data: data.any,
+	}
+	return returnNode
+}
+
 // Initializations of the function memory
 func (CS *callStack) initMemory(name string) *funcMemory {
 	data := funcMemory{
@@ -120,6 +143,9 @@ func (fnMem *funcMemory) get(name string) varValue {
 
 		varVal = varValue{Type{valueAndType.Type}, valueAndType.Data.(float64), "", valueAndType.Data}
 	} else if valueAndType.Type == 2 {
+		varVal = varValue{Type{valueAndType.Type}, 0, "", valueAndType.Data}
+
+	} else if valueAndType.Type == 3 {
 		varVal = varValue{Type{valueAndType.Type}, 0, "", valueAndType.Data}
 
 	}

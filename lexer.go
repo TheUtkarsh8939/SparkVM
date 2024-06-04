@@ -31,6 +31,8 @@ func findtype(tofindtypeof string) []string {
 		"sleep",
 		"fun",
 		"end",
+		"deref",
+		"setptr",
 	}
 	//List of all the keywords
 	keywordList := []string{
