@@ -113,7 +113,8 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 					Memory.setVar("_res", 0, toInt(data1 > data2))
 
 				}
-
+			case "mod":
+				operate(data, i, func(a float64, b float64) float64 { return float64(int(a) % int(b)) }, Memory, &CS, functionName)
 			case "deref":
 				if len(data[i]) < 3 {
 					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")

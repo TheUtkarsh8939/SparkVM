@@ -35,6 +35,7 @@ func findtype(tofindtypeof string) []string {
 		"setptr",
 		"eql",
 		"cmp",
+		"mod",
 	}
 	//List of all the keywords
 	keywordList := []string{
