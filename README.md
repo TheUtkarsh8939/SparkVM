@@ -1,4 +1,4 @@
-# Spark VM 0.31
+# Spark VM 0.32
 SparkVM is a project made for running easily readable bytecode ina virtual environment like that of **JVM** or **Common Language Runtime**. This is the original implementation of the SparkVM written fully in **Golang**
 
 ## Synatx

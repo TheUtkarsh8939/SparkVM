@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // Starting Point of the Program
@@ -14,7 +15,22 @@ func main() {
 		//Running the VM with 'run' sub-command will execute the file given afterwards in the format 'sparkvm run <filename>'
 		//*One must give the filename with its file extension
 		if args[1] == "run" {
-			content, err := os.ReadFile(args[2])
+			args2 := args[2]
+			cwd, err := os.Getwd()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			if strings.HasPrefix(args2, ".") {
+				withoutDot := strings.TrimPrefix(args2, ".")
+				args2 = cwd + withoutDot
+			} else if !strings.HasPrefix(args2, "\\") {
+				args2 = cwd + "\\" + args2
+			} else {
+				args2 = cwd + args2
+			}
+
+			content, err := os.ReadFile(args2)
 			if err != nil {
 				fmt.Println(string("\033[31m"), err)
 				os.Exit(1)
