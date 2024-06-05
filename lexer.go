@@ -81,7 +81,23 @@ func tokenize(content []byte) [][][]string {
 	i := 0
 	//Acutally tokenizing
 	for i < len(linearr) {
-		tokenmatrix = append(tokenmatrix, strings.Split(linearr[i], " "))
+		auxArr := []string{}
+		tmpString := ""
+		linearr[i] += "\n"
+		ignore := false
+		for j := 0; j < len(linearr[i]); j++ {
+			if string(linearr[i][j]) == "'" || string(linearr[i][j]) == "(" || string(linearr[i][j]) == ")" {
+				ignore = !ignore
+			}
+			if (string(linearr[i][j]) != " " && string(linearr[i][j]) != "\n") || ignore {
+				tmpString += string(linearr[i][j])
+				continue
+			}
+			auxArr = append(auxArr, tmpString)
+			tmpString = ""
+
+		}
+		tokenmatrix = append(tokenmatrix, auxArr)
 		i++
 	}
 	for x := 0; x < len(tokenmatrix); x++ {

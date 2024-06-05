@@ -79,38 +79,11 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 
 			switch instruction {
 			case "eql", "cmp":
-				if len(data[i]) < 3 {
-					fmt.Println("\u001b[31mFunction arguements could only be variables at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
-					CS.deleteStackFrame(functionName)
-
-					return Memory.Mem, true
-				}
-				opd1 := data[i][1]
-				opd2 := data[i][2]
-				data1, data2 := 0.0, 0.0
-				if opd1[0] == "var" || opd2[0] == "var" {
-					Mem1, Mem2 := Memory.get(opd1[1]), Memory.get(opd2[1])
-					if Mem1.Type.int != 0 || Mem2.Type.int != 0 {
-						fmt.Println("\u001b[31mFirst and Second Operand can only be an immediate or a variable with a type of number at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
-						CS.deleteStackFrame(functionName)
-
-						return Memory.Mem, true
-					}
-					data1 = Mem1.float64
-					data2 = Mem2.float64
-				} else if opd1[0] == "immediate" || opd2[0] == "immediate" {
-					data1, _ = strconv.ParseFloat(opd1[1], 64)
-					data2, _ = strconv.ParseFloat(opd2[1], 64)
-				} else {
-					fmt.Println("\u001b[31mFirst and Second Operand can only be an immediate or a variable with a type of number at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
-					CS.deleteStackFrame(functionName)
-
-					return Memory.Mem, true
-				}
 				if instruction == "eql" {
-					Memory.setVar("_res", 0, toInt(data1 == data2))
+					operate(data, i, func(a float64, b float64) float64 { return float64(toInt(int(a) == int(b))) }, Memory, &CS, functionName)
+
 				} else {
-					Memory.setVar("_res", 0, toInt(data1 > data2))
+					operate(data, i, func(a float64, b float64) float64 { return float64(toInt(int(a) > int(b))) }, Memory, &CS, functionName)
 
 				}
 			case "mod":
