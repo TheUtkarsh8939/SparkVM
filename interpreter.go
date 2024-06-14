@@ -137,35 +137,7 @@ func run(data [][][]string, functionName string, CS callStack, isRunningAFunc bo
 				}
 				x := functionName + "*" + data[i][1][1]
 				Memory.setVar(data[i][2][1], 3, x)
-			case "import":
-				if len(data[i]) < 4 {
-					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
-					CS.deleteStackFrame(functionName)
 
-					return Memory.Mem, true
-				}
-				firstOpd := data[i][1]
-				secondOpd := data[i][2]
-				thirdOpd := data[i][3]
-				if firstOpd[0] != "string" {
-					fmt.Println("\u001b[31mImport path must be a string at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
-					CS.deleteStackFrame(functionName)
-
-					return Memory.Mem, true
-				}
-				if secondOpd[0] != "keyword" || secondOpd[1] != "as" {
-					fmt.Println("\u001b[31mSecond Operand Must be \"as\" at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
-					CS.deleteStackFrame(functionName)
-
-					return Memory.Mem, true
-				}
-				if thirdOpd[0] != "var" {
-					fmt.Println("\u001b[31mImport name should be a variable at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")
-					CS.deleteStackFrame(functionName)
-
-					return Memory.Mem, true
-				}
-				Memory.setVar(thirdOpd[1], 2, firstOpd[1])
 			case "call":
 				if len(data[i]) < 2 {
 					fmt.Println("\u001b[31mNot enough Operands at line " + fmt.Sprintf("%d", i+1) + "\u001b[38;2;255;255;255m")

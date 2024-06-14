@@ -1,0 +1,4 @@
+fun sayHelloWorld()
+set %x 'Hello World'
+show %x
+end
